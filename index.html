@@ -1,129 +1,13 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>안양시 무장애 네비게이션 - 급경사지</title>
-    
-    <style>
-        body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            font-family: '맑은 고딕', 'Malgun Gothic', sans-serif; overflow: hidden;
-        }
-        #app-container { display: flex; flex-direction: column; height: 100%; }
-        header {
-            background-color: #2c3e50; color: #ffffff; padding: 15px 25px;
-            font-size: 22px; font-weight: bold; z-index: 10;
-        }
-        #main-content { display: flex; flex: 1; }
-        #sidebar {
-            width: 350px; background-color: #f8f9fa; border-right: 1px solid #dee2e6;
-            padding: 20px; overflow-y: auto; box-sizing: border-box;
-        }
-        .sidebar-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #34495e; }
-        .facility-card {
-            background: #ffffff; border: 1px solid #e9ecef; border-radius: 8px;
-            padding: 15px; margin-bottom: 12px; cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .facility-card:hover {
-            transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); border-color: #e74c3c;
-        }
-        .facility-card h4 { margin: 0 0 8px 0; color: #c0392b; }
-        .facility-card p { margin: 0; font-size: 14px; color: #666; }
-        
-        #map-container { flex: 1; position: relative; }
-        #map { width: 100%; height: 100%; }
-    </style>
+    <title>안양 다리지키미 네비게이터</title>
 
-    <!-- keyid 적용 및 주소를 좌표로 변환하기 위한 geocoder 서브모듈 추가 -->
-    <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=d7vewux24g&submodules=geocoder"></script>
+    <!-- 네이버 지도 API 불러오기 (ncpClientId 뒤에 본인의 Client ID가 잘 들어갔는지 확인하세요!) -->
+    <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=d7vewux24g"></script>
 </head>
 <body>
-    <div id="app-container">
-        <header>♿ 안양시 무장애 네비게이션 (위험구간: 급경사지)</header>
-        
-        <div id="main-content">
-            <aside id="sidebar">
-                <div class="sidebar-title">⚠️ 안양시 급경사지 목록</div>
-                <div id="list-container">
-                    <!-- 자바스크립트를 통해 데이터가 여기에 자동으로 삽입됩니다. -->
-                </div>
-            </aside>
-
-            <div id="map-container">
-                <div id="map"></div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // 1. 지도 기본 설정 (안양시청 중심)
-            var map = new naver.maps.Map('map', {
-                center: new naver.maps.LatLng(37.3943, 126.9568),
-                zoom: 13,
-                zoomControl: true,
-                zoomControlOptions: {
-                    position: naver.maps.Position.TOP_RIGHT,
-                    style: naver.maps.ZoomControlStyle.LARGE 
-                }
-            });
-
-            // 2. 엑셀에서 추출하여 주소 형태로 가공한 '급경사지' 데이터 예시
-            var steepSlopes = [
-                { "name": "안양9동 병목안시민공원", "address": "경기도 안양시 만안구 안양동 산 82-2" },
-                { "name": "경기 안양 만안 안양 N9지구", "address": "경기도 안양시 만안구 안양동 349-47" },
-                { "name": "경기 안양 만안 안양 N10지구", "address": "경기도 안양시 만안구 안양동 산 123-13" },
-                { "name": "경기 안양 만안 안양 N6지구", "address": "경기도 안양시 만안구 안양동 1422" },
-                { "name": "경기 안양 만안 안양 N11지구", "address": "경기도 안양시 만안구 안양동 산 57-19" },
-                { "name": "경기 안양 만안 안양 N7지구", "address": "경기도 안양시 만안구 안양동 산 83-7" },
-                { "name": "안양3동 서초교진입로", "address": "경기도 안양시 만안구 안양동 산 44-1" },
-                { "name": "경기 안양 만안 안양 N5지구", "address": "경기도 안양시 만안구 안양동 산 103-120" },
-                { "name": "경기 안양 만안 안양 N14지구", "address": "경기도 안양시 만안구 안양동 587-69" }
-            ];
-
-            var listContainer = document.getElementById('list-container');
-            var markers = [];
-
-            // 3. 데이터를 하나씩 돌면서 주소를 위경도 좌표로 변환(Geocoding) 후 지도에 마커 표시
-            steepSlopes.forEach(function(slope) {
-                
-                naver.maps.Service.geocode({ query: slope.address }, function(status, response) {
-                    if (status !== naver.maps.Service.Status.OK || response.v2.addresses.length === 0) {
-                        console.warn("좌표 변환 실패 (주소 오류): " + slope.address);
-                        return;
-                    }
-
-                    // 변환된 좌표 가져오기 (x: 경도, y: 위도)
-                    var lat = parseFloat(response.v2.addresses[0].y);
-                    var lng = parseFloat(response.v2.addresses[0].x);
-                    var position = new naver.maps.LatLng(lat, lng);
-
-                    // 지도에 마커 생성 (경고의 의미로 빨간색 느낌을 위해 title 설정)
-                    var marker = new naver.maps.Marker({
-                        position: position,
-                        map: map,
-                        title: slope.name
-                    });
-                    
-                    markers.push(marker);
-
-                    // 4. 좌측 사이드바에 카드 리스트 동적 생성
-                    var card = document.createElement('div');
-                    card.className = 'facility-card';
-                    card.innerHTML = '<h4>' + slope.name + '</h4><p>' + slope.address + '</p>';
-                    
-                    // 카드를 클릭했을 때 해당 마커 위치로 지도 부드럽게 이동 (PanTo)
-                    card.addEventListener('click', function() {
-                        map.panTo(position, { duration: 500 });
-                        map.setZoom(17, true); // 해당 지역으로 확대
-                    });
-
-                    listContainer.appendChild(card);
-                });
-            });
+    <!-- 지도가 화면에 표시될 영역 -->
+@@ -31,4 +31,4 @@
         });
     </script>
 </body>
+</html>
 </html>
