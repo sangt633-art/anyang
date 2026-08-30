@@ -5,12 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
     <title>네이버 동적 지도 불러오기</title>
     
-    <!-- 네이버 지도 API 스크립트 -->
+    <style>
+        /* 브라우저 기본 여백(margin, padding)을 제거합니다 */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden; /* 스크롤바 방지 */
+        }
+    </style>
+
     <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=d7vewux24g"></script>
 </head>
 <body>
-    <!-- 지도를 렌더링할 영역 (id와 크기를 지정해야 합니다) -->
-    <div id="map" style="width:100%; height:500px;"></div>
+    <div id="map" style="width:100%; height:100vh;"></div>
 
     <script>
         // 지도의 초기 중심 좌표 (위도, 경도) 설정 - 안양시청
@@ -29,6 +38,11 @@
 
         // 'map'이라는 id를 가진 div 엘리먼트에 지도를 생성합니다.
         var map = new naver.maps.Map('map', mapOptions);
+
+        // 브라우저 창 크기가 변경될 때 지도의 크기도 다시 맞춰주는 이벤트
+        window.addEventListener('resize', function() {
+            map.setSize(new naver.maps.Size(window.innerWidth, window.innerHeight));
+        });
     </script>
 </body>
 </html>
